@@ -1,0 +1,293 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidSiteConfig(data) {
+      return data.keys().hasAll([
+          'telegramLink',
+          'supportLink',
+          'rechargeNumbers',
+          'referralRates',
+          'registrationBonus',
+          'minDeposit',
+          'minWithdraw',
+          'autoApproveDeposit'
+        ])
+        && data.keys().hasOnly([
+          'telegramLink',
+          'supportLink',
+          'rechargeNumbers',
+          'referralRates',
+          'registrationBonus',
+          'minDeposit',
+          'minWithdraw',
+          'autoApproveDeposit'
+        ])
+        && data.telegramLink is string && data.telegramLink.size() >= 1 && data.telegramLink.size() <= 300
+        && data.supportLink is string && data.supportLink.size() >= 1 && data.supportLink.size() <= 300
+        && data.rechargeNumbers is map
+        && data.rechargeNumbers.keys().hasAll(['বিকাশ', 'নগদ', 'রকেট'])
+        && data.rechargeNumbers.keys().hasOnly(['বিকাশ', 'নগদ', 'রকেট'])
+        && data.rechargeNumbers['বিকাশ'] is string && data.rechargeNumbers['বিকাশ'].size() <= 40
+        && data.rechargeNumbers['নগদ'] is string && data.rechargeNumbers['নগদ'].size() <= 40
+        && data.rechargeNumbers['রকেট'] is string && data.rechargeNumbers['রকেট'].size() <= 40
+        && data.referralRates is map
+        && data.referralRates.keys().hasAll(['level1', 'level2', 'level3'])
+        && data.referralRates.keys().hasOnly(['level1', 'level2', 'level3'])
+        && data.referralRates.level1 is number && data.referralRates.level1 >= 0 && data.referralRates.level1 <= 100
+        && data.referralRates.level2 is number && data.referralRates.level2 >= 0 && data.referralRates.level2 <= 100
+        && data.referralRates.level3 is number && data.referralRates.level3 >= 0 && data.referralRates.level3 <= 100
+        && data.registrationBonus is number && data.registrationBonus >= 0 && data.registrationBonus <= 100000
+        && data.minDeposit is number && data.minDeposit >= 10 && data.minDeposit <= 100000
+        && data.minWithdraw is number && data.minWithdraw >= 10 && data.minWithdraw <= 100000
+        && data.autoApproveDeposit == false;
+    }
+
+    function isValidAdminSecret(data) {
+      return data.keys().hasAll(['username', 'passwordHash'])
+        && data.keys().hasOnly(['username', 'passwordHash'])
+        && data.username == 'feedexadmin'
+        && data.passwordHash is string
+        && data.passwordHash.size() >= 10
+        && data.passwordHash.size() <= 200;
+    }
+
+    function isValidPlan(data) {
+      return data.keys().hasAll(['id', 'code', 'name', 'category', 'price', 'dailyIncome', 'cycleDays', 'totalReturn', 'imagePath'])
+        && data.keys().hasOnly(['id', 'code', 'name', 'category', 'price', 'dailyIncome', 'cycleDays', 'totalReturn', 'imagePath'])
+        && isValidId(data.id)
+        && data.code is string && data.code.size() >= 1 && data.code.size() <= 64
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.category in ['daily', 'welfare']
+        && data.price is number && data.price > 0 && data.price <= 10000000
+        && data.dailyIncome is number && data.dailyIncome > 0 && data.dailyIncome <= 10000000
+        && data.cycleDays is number && data.cycleDays >= 1 && data.cycleDays <= 3650
+        && data.totalReturn is number && data.totalReturn > 0 && data.totalReturn <= 100000000
+        && data.imagePath is string && data.imagePath.size() >= 1 && data.imagePath.size() <= 300;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll([
+          'id',
+          'memberId',
+          'phone',
+          'inviteCode',
+          'passwordHash',
+          'balance',
+          'totalRecharge',
+          'totalWithdrawal',
+          'blocked',
+          'deviceId',
+          'multiAccountFlag',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'memberId',
+          'phone',
+          'inviteCode',
+          'referredBy',
+          'passwordHash',
+          'withdrawPasswordHash',
+          'balance',
+          'totalRecharge',
+          'totalWithdrawal',
+          'lastSpinDate',
+          'blocked',
+          'deviceId',
+          'multiAccountFlag',
+          'bankBinding',
+          'createdAt'
+        ])
+        && isValidId(data.id)
+        && data.memberId is string && data.memberId.size() >= 3 && data.memberId.size() <= 32
+        && data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 24
+        && data.inviteCode is string && data.inviteCode.size() >= 4 && data.inviteCode.size() <= 24
+        && (!('referredBy' in data) || data.referredBy == null || (data.referredBy is string && data.referredBy.size() <= 80))
+        && data.passwordHash is string && data.passwordHash.size() >= 10 && data.passwordHash.size() <= 200
+        && (!('withdrawPasswordHash' in data) || data.withdrawPasswordHash == null || (data.withdrawPasswordHash is string && data.withdrawPasswordHash.size() <= 200))
+        && data.balance is number && data.balance >= 0 && data.balance <= 100000000
+        && data.totalRecharge is number && data.totalRecharge >= 0 && data.totalRecharge <= 100000000
+        && data.totalWithdrawal is number && data.totalWithdrawal >= 0 && data.totalWithdrawal <= 100000000
+        && (!('lastSpinDate' in data) || data.lastSpinDate == null || (data.lastSpinDate is string && data.lastSpinDate.size() <= 32))
+        && data.blocked is bool
+        && data.deviceId is string && data.deviceId.size() <= 128
+        && data.multiAccountFlag is bool
+        && (!('bankBinding' in data) || data.bankBinding == null || (
+          data.bankBinding is map
+          && data.bankBinding.keys().hasAll(['network', 'walletAddress', 'accountName'])
+          && data.bankBinding.keys().hasOnly(['network', 'walletAddress', 'accountName'])
+          && data.bankBinding.network in ['বিকাশ', 'নগদ', 'রকেট']
+          && data.bankBinding.walletAddress is string && data.bankBinding.walletAddress.size() >= 6 && data.bankBinding.walletAddress.size() <= 32
+          && data.bankBinding.accountName is string && data.bankBinding.accountName.size() >= 1 && data.bankBinding.accountName.size() <= 80
+        ))
+        && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'planId',
+          'planName',
+          'category',
+          'price',
+          'dailyIncome',
+          'cycleDays',
+          'claimedDays',
+          'totalEarned',
+          'purchasedAt',
+          'status'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'planId',
+          'planName',
+          'category',
+          'price',
+          'dailyIncome',
+          'cycleDays',
+          'claimedDays',
+          'totalEarned',
+          'purchasedAt',
+          'lastClaimedAt',
+          'status'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.userId)
+        && isValidId(data.planId)
+        && data.planName is string && data.planName.size() >= 1 && data.planName.size() <= 120
+        && data.category in ['daily', 'welfare']
+        && data.price is number && data.price > 0
+        && data.dailyIncome is number && data.dailyIncome > 0
+        && data.cycleDays is number && data.cycleDays >= 1
+        && data.claimedDays is number && data.claimedDays >= 0 && data.claimedDays <= data.cycleDays
+        && data.totalEarned is number && data.totalEarned >= 0
+        && data.purchasedAt is string && data.purchasedAt.size() <= 64
+        && (!('lastClaimedAt' in data) || data.lastClaimedAt == null || (data.lastClaimedAt is string && data.lastClaimedAt.size() <= 64))
+        && data.status in ['সক্রিয়', 'সম্পন্ন'];
+    }
+
+    function isValidRecord(data) {
+      return data.keys().hasAll(['id', 'userId', 'type', 'title', 'amount', 'direction', 'status', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'type', 'title', 'amount', 'direction', 'status', 'method', 'reference', 'createdAt'])
+        && isValidId(data.id)
+        && isValidId(data.userId)
+        && data.type in ['bonus', 'recharge', 'withdrawal', 'purchase', 'income', 'commission', 'admin']
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.amount is number && data.amount >= 0 && data.amount <= 100000000
+        && data.direction in ['credit', 'debit']
+        && data.status in ['সম্পন্ন', 'অপেক্ষমাণ', 'বাতিল']
+        && (!('method' in data) || data.method == null || (data.method is string && data.method.size() <= 32))
+        && (!('reference' in data) || data.reference == null || (data.reference is string && data.reference.size() <= 120))
+        && data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidLock(data) {
+      return data.keys().hasAll(['refId', 'createdAt'])
+        && data.keys().hasOnly(['refId', 'createdAt'])
+        && data.refId is string && data.refId.size() >= 1 && data.refId.size() <= 120
+        && data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 64;
+    }
+
+    match /site_meta/public_config {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isValidSiteConfig(incoming());
+      allow delete: if false;
+    }
+
+    match /site_meta/admin_secret {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isValidAdminSecret(incoming())
+        && incoming().username == 'feedexadmin';
+      allow delete: if false;
+    }
+
+    match /plans/{planId} {
+      allow get: if isValidId(planId);
+      allow list: if true;
+      allow create, update: if isValidId(planId) && isValidPlan(incoming()) && incoming().id == planId;
+      allow delete: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if true;
+      allow create: if isValidId(userId) && isValidUser(incoming()) && incoming().id == userId;
+      allow update: if isValidId(userId)
+        && isValidUser(incoming())
+        && incoming().id == existing().id
+        && incoming().memberId == existing().memberId
+        && incoming().phone == existing().phone
+        && incoming().inviteCode == existing().inviteCode
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isValidId(productId) && isValidProduct(incoming()) && incoming().id == productId;
+      allow update: if isValidId(productId)
+        && isValidProduct(incoming())
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().planId == existing().planId
+        && incoming().purchasedAt == existing().purchasedAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['claimedDays', 'totalEarned', 'lastClaimedAt', 'status']);
+      allow delete: if false;
+    }
+
+    match /records/{recordId} {
+      allow get: if isValidId(recordId);
+      allow list: if true;
+      allow create: if isValidId(recordId) && isValidRecord(incoming()) && incoming().id == recordId;
+      allow update: if isValidId(recordId)
+        && isValidRecord(incoming())
+        && existing().status == 'অপেক্ষমাণ'
+        && incoming().status in ['সম্পন্ন', 'বাতিল']
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().type == existing().type
+        && incoming().amount == existing().amount
+        && incoming().direction == existing().direction
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+    }
+
+    match /txid_locks/{txidKey} {
+      allow get: if isValidId(txidKey);
+      allow list: if false;
+      allow create: if isValidId(txidKey) && isValidLock(incoming());
+      allow update, delete: if false;
+    }
+
+    match /phone_locks/{phoneKey} {
+      allow get: if isValidId(phoneKey);
+      allow list: if false;
+      allow create: if isValidId(phoneKey) && isValidLock(incoming());
+      allow update, delete: if false;
+    }
+  }
+}

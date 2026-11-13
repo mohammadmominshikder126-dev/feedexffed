@@ -1,0 +1,208 @@
+{
+  "entities": {
+    "SiteConfig": {
+      "title": "SiteConfig",
+      "description": "Global site settings including deposit numbers, Telegram/support links, referral commission rates, bonuses, and limits.",
+      "type": "object",
+      "properties": {
+        "telegramLink": { "type": "string", "maxLength": 300 },
+        "supportLink": { "type": "string", "maxLength": 300 },
+        "rechargeNumbers": { "type": "object" },
+        "referralRates": { "type": "object" },
+        "registrationBonus": { "type": "number" },
+        "minDeposit": { "type": "number" },
+        "minWithdraw": { "type": "number" },
+        "autoApproveDeposit": { "type": "boolean" }
+      },
+      "required": [
+        "telegramLink",
+        "supportLink",
+        "rechargeNumbers",
+        "referralRates",
+        "registrationBonus",
+        "minDeposit",
+        "minWithdraw",
+        "autoApproveDeposit"
+      ]
+    },
+    "AdminCredential": {
+      "title": "AdminCredential",
+      "description": "Admin login verification record.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string", "maxLength": 64 },
+        "passwordHash": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["username", "passwordHash"]
+    },
+    "InvestmentPlan": {
+      "title": "InvestmentPlan",
+      "description": "VIP or Welfare investment plan definition.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "code": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 120 },
+        "category": { "type": "string", "enum": ["daily", "welfare"] },
+        "price": { "type": "number" },
+        "dailyIncome": { "type": "number" },
+        "cycleDays": { "type": "number" },
+        "totalReturn": { "type": "number" },
+        "imagePath": { "type": "string", "maxLength": 300 }
+      },
+      "required": [
+        "id",
+        "code",
+        "name",
+        "category",
+        "price",
+        "dailyIncome",
+        "cycleDays",
+        "totalReturn",
+        "imagePath"
+      ]
+    },
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Registered partner account with phone number, invite code, balance, and bindings.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 80, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "memberId": { "type": "string", "maxLength": 32 },
+        "phone": { "type": "string", "maxLength": 24 },
+        "inviteCode": { "type": "string", "maxLength": 24 },
+        "referredBy": { "type": "string", "maxLength": 80 },
+        "passwordHash": { "type": "string", "maxLength": 200 },
+        "withdrawPasswordHash": { "type": "string", "maxLength": 200 },
+        "balance": { "type": "number" },
+        "totalRecharge": { "type": "number" },
+        "totalWithdrawal": { "type": "number" },
+        "lastSpinDate": { "type": "string", "maxLength": 32 },
+        "blocked": { "type": "boolean" },
+        "deviceId": { "type": "string", "maxLength": 128 },
+        "multiAccountFlag": { "type": "boolean" },
+        "bankBinding": { "type": "object" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": [
+        "id",
+        "memberId",
+        "phone",
+        "inviteCode",
+        "passwordHash",
+        "balance",
+        "totalRecharge",
+        "totalWithdrawal",
+        "blocked",
+        "deviceId",
+        "multiAccountFlag",
+        "createdAt"
+      ]
+    },
+    "PurchasedProduct": {
+      "title": "PurchasedProduct",
+      "description": "Active or completed user investment plan instance.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 80, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 80 },
+        "planId": { "type": "string", "maxLength": 64 },
+        "planName": { "type": "string", "maxLength": 120 },
+        "category": { "type": "string", "enum": ["daily", "welfare"] },
+        "price": { "type": "number" },
+        "dailyIncome": { "type": "number" },
+        "cycleDays": { "type": "number" },
+        "claimedDays": { "type": "number" },
+        "totalEarned": { "type": "number" },
+        "purchasedAt": { "type": "string", "maxLength": 64 },
+        "lastClaimedAt": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "maxLength": 32 }
+      },
+      "required": [
+        "id",
+        "userId",
+        "planId",
+        "planName",
+        "category",
+        "price",
+        "dailyIncome",
+        "cycleDays",
+        "claimedDays",
+        "totalEarned",
+        "purchasedAt",
+        "status"
+      ]
+    },
+    "TransactionRecord": {
+      "title": "TransactionRecord",
+      "description": "Account ledger entry for deposits, withdrawals, bonuses, purchases, income, commissions, and admin adjustments.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 80, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 80 },
+        "type": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 200 },
+        "amount": { "type": "number" },
+        "direction": { "type": "string", "enum": ["credit", "debit"] },
+        "status": { "type": "string", "maxLength": 32 },
+        "method": { "type": "string", "maxLength": 32 },
+        "reference": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": [
+        "id",
+        "userId",
+        "type",
+        "title",
+        "amount",
+        "direction",
+        "status",
+        "createdAt"
+      ]
+    },
+    "UniqueLock": {
+      "title": "UniqueLock",
+      "description": "Uniqueness lock document for phone numbers or deposit transaction IDs.",
+      "type": "object",
+      "properties": {
+        "refId": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["refId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/site_meta/public_config": {
+      "schema": { "$ref": "#/entities/SiteConfig" },
+      "description": "Global site configuration readable across all domains and devices."
+    },
+    "/site_meta/admin_secret": {
+      "schema": { "$ref": "#/entities/AdminCredential" },
+      "description": "Admin panel authentication credentials."
+    },
+    "/plans/{planId}": {
+      "schema": { "$ref": "#/entities/InvestmentPlan" },
+      "description": "Investment plan catalog configurable by Admin."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Registered member accounts."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/PurchasedProduct" },
+      "description": "Purchased investment products owned by members."
+    },
+    "/records/{recordId}": {
+      "schema": { "$ref": "#/entities/TransactionRecord" },
+      "description": "All financial and deposit/withdrawal records."
+    },
+    "/txid_locks/{txidKey}": {
+      "schema": { "$ref": "#/entities/UniqueLock" },
+      "description": "Prevents duplicate Transaction ID reuse."
+    },
+    "/phone_locks/{phoneKey}": {
+      "schema": { "$ref": "#/entities/UniqueLock" },
+      "description": "Prevents duplicate registration of the same mobile number."
+    }
+  }
+}
